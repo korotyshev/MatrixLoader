@@ -1,16 +1,19 @@
 package ua.vzaperi.matrix;
 
 import java.awt.EventQueue;
+import java.util.HashMap;
 
+import javax.swing.ImageIcon;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import java.awt.BorderLayout;
-import java.awt.Cursor;
 
 public class MatrixLoader {
 
 	private JFrame frame;
+	private HashMap<String, ImageIcon> imageCache = new HashMap<>(); 
 
+	private static final String BASE_IMAGE = "NEO_interface_0.jpg"; 
+	
 	/**
 	 * Launch the application.
 	 */
@@ -45,11 +48,30 @@ public class MatrixLoader {
 		frame.setResizable(false);
 		frame.setUndecorated(true);
 		
-		JLabel lblNewLabel = new JLabel("");
-		lblNewLabel.setBounds(0, 0, 1024, 768);
+		JLabel backImg = new JLabel("");
+		backImg.setBounds(0, 0, 1024, 768);
 		
-		lblNewLabel.setIcon(null);
+//		lblNewLabel.setIcon(new ImageIcon("C:\\Users\\korotyshev\\workspace\\MatrixLoader\\main\\resources\\NEO_interface_0.jpg"));
+		backImg.setIcon(new ImageIcon(getClass().getClassLoader().getResource("NEO_interface_0.jpg")));
+		frame.getContentPane().add(backImg);
+		
+		JLabel lblNewLabel = new JLabel("New label");
+		lblNewLabel.setBounds(793, 415, 46, 14);
 		frame.getContentPane().add(lblNewLabel);
 	}
 
+	/** Returns an ImageIcon, or null if the path was invalid. */
+	protected ImageIcon getImage(String path) {
+		ImageIcon ii = imageCache.get(path);
+		if (ii == null) {
+		    java.net.URL imgURL = getClass().getClassLoader().getResource(path);
+		    if (imgURL != null) {
+		    	ii = new ImageIcon(imgURL, "");
+		    	imageCache.put(path, ii);
+		    } else {
+		        System.err.println("Couldn't find file: " + path);
+		    }
+		}
+		return ii;
+	}
 }
