@@ -1,18 +1,25 @@
 package ua.vzaperi.matrix;
 
-import java.awt.EventQueue;
-import java.util.HashMap;
+import static ua.vzaperi.matrix.util.ImageUtils.getImage;
+import static ua.vzaperi.matrix.util.MatrixLoaderEvents.*;
 
-import javax.swing.ImageIcon;
+import java.awt.EventQueue;
+import java.awt.event.KeyEvent;
+import java.awt.event.KeyListener;
+
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 
-public class MatrixLoader {
+import ua.vzaperi.matrix.util.MatrixLoaderEvents;
+
+public class MatrixLoader implements KeyListener {
 
 	private JFrame frame;
-	private HashMap<String, ImageIcon> imageCache = new HashMap<>(); 
 
 	private static final String BASE_IMAGE = "NEO_interface_0.jpg"; 
+	private static final String CONNECTED_IMAGE = "connected.jpg"; 
+	private JLabel backImg;
+	private JLabel userStatusImg;
 	
 	/**
 	 * Launch the application.
@@ -48,30 +55,52 @@ public class MatrixLoader {
 		frame.setResizable(false);
 		frame.setUndecorated(true);
 		
-		JLabel backImg = new JLabel("");
+		frame.addKeyListener(this);
+		
+		userStatusImg = new JLabel("");
+		userStatusImg.setIcon(getImage(CONNECTED_IMAGE));
+		userStatusImg.setBounds(765, 564, 218, 93);
+		frame.getContentPane().add(userStatusImg);
+		
+		backImg = new JLabel("");
 		backImg.setBounds(0, 0, 1024, 768);
 		
-//		lblNewLabel.setIcon(new ImageIcon("C:\\Users\\korotyshev\\workspace\\MatrixLoader\\main\\resources\\NEO_interface_0.jpg"));
-		backImg.setIcon(new ImageIcon(getClass().getClassLoader().getResource("NEO_interface_0.jpg")));
+		backImg.setIcon(getImage(BASE_IMAGE));
 		frame.getContentPane().add(backImg);
-		
-		JLabel lblNewLabel = new JLabel("New label");
-		lblNewLabel.setBounds(793, 415, 46, 14);
-		frame.getContentPane().add(lblNewLabel);
+	}
+	
+	private void processEvent(MatrixLoaderEvents event) {
+		switch (event) {
+			case NEO_CONNECTED: 
+				userStatusImg.setVisible(true);
+				break;
+			case NEO_DISCONNECTED: 
+				userStatusImg.setVisible(false);
+				break;
+			default:
+				// nothing
+				break;
+		}
 	}
 
-	/** Returns an ImageIcon, or null if the path was invalid. */
-	protected ImageIcon getImage(String path) {
-		ImageIcon ii = imageCache.get(path);
-		if (ii == null) {
-		    java.net.URL imgURL = getClass().getClassLoader().getResource(path);
-		    if (imgURL != null) {
-		    	ii = new ImageIcon(imgURL, "");
-		    	imageCache.put(path, ii);
-		    } else {
-		        System.err.println("Couldn't find file: " + path);
-		    }
+	////// KeyListener - only for testing!
+	
+	@Override
+	public void keyTyped(KeyEvent e) {}
+
+	@Override
+	public void keyPressed(KeyEvent e) {
+		switch (e.getKeyCode()) {
+		case KeyEvent.VK_1:
+			processEvent(NEO_CONNECTED);
+			break;
+		case KeyEvent.VK_2:
+			processEvent(NEO_DISCONNECTED);
+			break;
 		}
-		return ii;
 	}
+
+	@Override
+	public void keyReleased(KeyEvent e) {}
+	
 }
