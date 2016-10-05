@@ -3,6 +3,7 @@ package ua.vzaperi.matrix;
 import static ua.vzaperi.matrix.util.ImageUtils.getImage;
 import static ua.vzaperi.matrix.util.MatrixLoaderEvents.*;
 
+import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
@@ -52,6 +53,9 @@ public class MatrixLoader implements KeyListener {
 	
 	private int i = 0; 				// iterator
 	private int diskProcess = 0;	// case for what disk is processing now
+	
+	private Color foregroundColor = new Color(99, 172, 238);	// colors for progress bar
+	private Color backgroundColor = new Color(0, 23, 48);
 	
 	private boolean disk1 = false; 
 	private boolean disk2 = false; 				//flags for cable output
@@ -161,6 +165,8 @@ public class MatrixLoader implements KeyListener {
 		frame.getContentPane().add(spSkillsSlides); 									//sp skills slides
 		
 		progressBar = new JProgressBar();
+		progressBar.setBackground(backgroundColor);
+		progressBar.setForeground(foregroundColor);		
 		progressBar.setBounds(Resolution.PROGRESS_BAR_X, Resolution.PROGRESS_BAR_Y, Resolution.PROGRESS_BAR_WIDTH, Resolution.PROGRESS_BAR_HEIGHT);
 		progressBar.setIndeterminate(false);											//progress bar 
 		progressBar.setStringPainted(false);			        
