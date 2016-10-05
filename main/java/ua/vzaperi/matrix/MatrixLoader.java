@@ -26,14 +26,17 @@ public class MatrixLoader implements KeyListener {
 	private JLabel backgroundImg;		//background label
 	private JLabel neoStatusImg;		//cable connect label
 	
+	private JLabel juJitsuTextImg;
 	private JLabel juJitsuUploadImg;
 	private JLabel juJitsuCompleteImg;	//1st skill labels
 	private JLabel juJitsuSlides;
 	
-	private JLabel defenceUploadImg;
-	private JLabel defenceCompleteImg;	//2nd skills labels
-	private JLabel defenceSlides;
+	private JLabel defenseTextImg;
+	private JLabel defenseUploadImg;
+	private JLabel defenseCompleteImg;	//2nd skills labels
+	private JLabel defenseSlides;
 	
+	private JLabel spSkillsTextImg;
 	private JLabel spSkillsUploadImg;
 	private JLabel spSkillsCompleteImg;
 	private JLabel spSkillsStoppedImg;	//3rd skill labels
@@ -45,8 +48,8 @@ public class MatrixLoader implements KeyListener {
 	private Timer juJitsuTimer;
 	private TimerTask juJitsuTask;		//1st skill timer and task
 	
-	private Timer defenceTimer;
-	private TimerTask defenceTask;		//2nd skill timer and task
+	private Timer defenseTimer;
+	private TimerTask defenseTask;		//2nd skill timer and task
 	
 	private Timer spSkillsTimer;
 	private TimerTask spSkillsTask;		//3rd skill timer and task
@@ -54,8 +57,8 @@ public class MatrixLoader implements KeyListener {
 	private int i = 0; 				// iterator
 	private int diskProcess = 0;	// case for what disk is processing now
 	
-	private Color foregroundColor = new Color(99, 172, 238);	// colors for progress bar
-	private Color backgroundColor = new Color(0, 23, 48);
+	private Color foregroundColor = new Color(43, 153, 214);     // #2b99d6
+	private Color backgroundColor = new Color(7, 25, 45);		//#07192d
 	
 	private boolean disk1 = false; 
 	private boolean disk2 = false; 				//flags for cable output
@@ -102,7 +105,13 @@ public class MatrixLoader implements KeyListener {
 		neoStatusImg.setBounds(Resolution.NEO_X, Resolution.NEO_Y, Resolution.NEO_WIDTH, Resolution.NEO_HEIGHT);
 		neoStatusImg.setIcon(getImage(Images.NEO_CONNECTED)); 							// NEO connected - cable
 		frame.getContentPane().add(neoStatusImg);
-		neoStatusImg.setVisible(false);		
+		neoStatusImg.setVisible(false);
+		
+		juJitsuTextImg = new JLabel("");
+		juJitsuTextImg.setBounds(Resolution.SKILL_TITLE_X, Resolution.SKILL_TITLE_Y, Resolution.SKILL_TITLE_WIDTH, Resolution.SKILL_TITLE_HEIGHT);
+		juJitsuTextImg.setIcon(getImage(Images.FIRST_SKILL_TEXT));						// ju jitsu title
+		frame.getContentPane().add(juJitsuTextImg);
+		juJitsuTextImg.setVisible(false);
 				
 		juJitsuUploadImg = new JLabel("");
 		juJitsuUploadImg.setBounds(Resolution.FIRST_SKILL_X, Resolution.FIRST_SKILL_Y, Resolution.FIRST_SKILL_WIDTH, Resolution.FIRST_SKILL_HEIGHT);
@@ -116,17 +125,29 @@ public class MatrixLoader implements KeyListener {
 		frame.getContentPane().add(juJitsuCompleteImg);
 		juJitsuCompleteImg.setVisible(false);		
 		
-		defenceUploadImg = new JLabel("");
-		defenceUploadImg.setBounds(Resolution.SECOND_SKILL_X, Resolution.SECOND_SKILL_Y, Resolution.SECOND_SKILL_WIDTH, Resolution.SECOND_SKILL_HEIGHT);
-		defenceUploadImg.setIcon(getImage(Images.SECOND_SKILL_UPLOAD)); 				// defense right section - upload
-		frame.getContentPane().add(defenceUploadImg);
-		defenceUploadImg.setVisible(false);
+		defenseTextImg = new JLabel("");
+		defenseTextImg.setBounds(Resolution.SKILL_TITLE_X, Resolution.SKILL_TITLE_Y, Resolution.SKILL_TITLE_WIDTH, Resolution.SKILL_TITLE_HEIGHT);
+		defenseTextImg.setIcon(getImage(Images.SECOND_SKILL_TEXT));						// defense title
+		frame.getContentPane().add(defenseTextImg);
+		defenseTextImg.setVisible(false);
 		
-		defenceCompleteImg = new JLabel("");
-		defenceCompleteImg.setBounds(Resolution.SECOND_SKILL_X, Resolution.SECOND_SKILL_Y, Resolution.SECOND_SKILL_WIDTH, Resolution.SECOND_SKILL_HEIGHT);
-		defenceCompleteImg.setIcon(getImage(Images.SECOND_SKILL_COMPLETE)); 			// defense right section - complete
-		frame.getContentPane().add(defenceCompleteImg);
-		defenceCompleteImg.setVisible(false);
+		defenseUploadImg = new JLabel("");
+		defenseUploadImg.setBounds(Resolution.SECOND_SKILL_X, Resolution.SECOND_SKILL_Y, Resolution.SECOND_SKILL_WIDTH, Resolution.SECOND_SKILL_HEIGHT);
+		defenseUploadImg.setIcon(getImage(Images.SECOND_SKILL_UPLOAD)); 				// defense right section - upload
+		frame.getContentPane().add(defenseUploadImg);
+		defenseUploadImg.setVisible(false);
+		
+		defenseCompleteImg = new JLabel("");
+		defenseCompleteImg.setBounds(Resolution.SECOND_SKILL_X, Resolution.SECOND_SKILL_Y, Resolution.SECOND_SKILL_WIDTH, Resolution.SECOND_SKILL_HEIGHT);
+		defenseCompleteImg.setIcon(getImage(Images.SECOND_SKILL_COMPLETE)); 			// defense right section - complete
+		frame.getContentPane().add(defenseCompleteImg);
+		defenseCompleteImg.setVisible(false);
+		
+		spSkillsTextImg = new JLabel("");
+		spSkillsTextImg.setBounds(Resolution.SKILL_TITLE_X, Resolution.SKILL_TITLE_Y, Resolution.SKILL_TITLE_WIDTH, Resolution.SKILL_TITLE_HEIGHT);
+		spSkillsTextImg.setIcon(getImage(Images.THIRD_SKILL_TEXT));						// sp skills title
+		frame.getContentPane().add(spSkillsTextImg);
+		spSkillsTextImg.setVisible(false);
 		
 		spSkillsUploadImg = new JLabel("");
 		spSkillsUploadImg.setBounds(Resolution.THIRD_SKILL_X, Resolution.THIRD_SKILL_Y, Resolution.THIRD_SKILL_WIDTH, Resolution.THIRD_SKILL_HEIGHT);
@@ -156,9 +177,9 @@ public class MatrixLoader implements KeyListener {
 		juJitsuSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
 		frame.getContentPane().add(juJitsuSlides); 										//ju jitsu slides
 		
-		defenceSlides = new JLabel("");				
-		defenceSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
-		frame.getContentPane().add(defenceSlides); 										//defense slides		
+		defenseSlides = new JLabel("");				
+		defenseSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
+		frame.getContentPane().add(defenseSlides); 										//defense slides		
 		
 		spSkillsSlides = new JLabel("");				
 		spSkillsSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
@@ -204,6 +225,7 @@ public class MatrixLoader implements KeyListener {
 	}
 	
 	private void juJitsuStop(){
+		juJitsuTextImg.setVisible(false);
 		progressBar.setVisible(false);
 		juJitsuSlides.setVisible(false);
 		juJitsuSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[0]));	//output from complete program
@@ -215,38 +237,39 @@ public class MatrixLoader implements KeyListener {
 		}						
 	}
 	
-	class DefenceTask extends TimerTask{
+	class DefenseTask extends TimerTask{
 		public void run(){			
-			if(!defenceCompleteImg.isVisible())
+			if(!defenseCompleteImg.isVisible())
 			{
-				defenceUploadImg.setVisible(true);
+				defenseUploadImg.setVisible(true);
 				progressBar.setValue(progressBar.getValue() + 10);
-				defenceSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));			//upload disk
+				defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));			//upload disk
 				i++;
 				if(i == 9){
 					disk2 = true;
-					defenceUploadImg.setVisible(false);
-					defenceCompleteImg.setVisible(true);				//upload complete
+					defenseUploadImg.setVisible(false);
+					defenseCompleteImg.setVisible(true);				//upload complete
 					return;
 				}
 			}
 			else{
 				if(i < 9){
-					defenceSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
+					defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
 					i++;
 				}
 			}
 		}
 	}
 	
-	private void defenceStop(){
+	private void defenseStop(){
+		defenseTextImg.setVisible(false);
 		progressBar.setVisible(false);
-		defenceSlides.setVisible(false);
-		defenceSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[0]));		//output from complete program
+		defenseSlides.setVisible(false);
+		defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[0]));		//output from complete program
 		i = 0;
-		if(!defenceCompleteImg.isVisible())
+		if(!defenseCompleteImg.isVisible())
 		{
-			defenceUploadImg.setVisible(false);			//output from uploading program
+			defenseUploadImg.setVisible(false);			//output from uploading program
 			progressBar.setValue(0);
 		}						
 	}
@@ -287,6 +310,7 @@ public class MatrixLoader implements KeyListener {
 	}
 	
 	private void spSkillsStop(){
+		spSkillsTextImg.setVisible(false);
 		progressBar.setVisible(false);
 		spSkillsSlides.setVisible(false);
 		spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[0]));		//output from complete program
@@ -307,8 +331,8 @@ public class MatrixLoader implements KeyListener {
 			juJitsuTimer.cancel();
 			break;
 		case 2:
-			defenceTask.cancel();
-			defenceTimer.cancel();			//closing still open threads
+			defenseTask.cancel();
+			defenseTimer.cancel();			//closing still open threads
 			break;
 		case 3:
 			spSkillsTask.cancel();
@@ -321,14 +345,17 @@ public class MatrixLoader implements KeyListener {
 		neoStatusImg.setVisible(false);
 		progressBar.setVisible(false);
 		
+		juJitsuTextImg.setVisible(false);
 		juJitsuUploadImg.setVisible(false);
 		juJitsuCompleteImg.setVisible(false);
 		juJitsuSlides.setVisible(false);
 		
-		defenceUploadImg.setVisible(false);
-		defenceCompleteImg.setVisible(false);
-		defenceSlides.setVisible(false);
+		defenseTextImg.setVisible(false);
+		defenseUploadImg.setVisible(false);
+		defenseCompleteImg.setVisible(false);
+		defenseSlides.setVisible(false);
 		
+		spSkillsTextImg.setVisible(false);
 		spSkillsUploadImg.setVisible(false);
 		spSkillsCompleteImg.setVisible(false);
 		spSkillsStoppedImg.setVisible(false);
@@ -349,7 +376,7 @@ public class MatrixLoader implements KeyListener {
 					juJitsuCompleteImg.setVisible(true);					
 				}
 				if(disk2){					
-					defenceCompleteImg.setVisible(true);
+					defenseCompleteImg.setVisible(true);
 				}
 				if(disk3){
 					spSkillsCompleteImg.setVisible(true);
@@ -368,6 +395,7 @@ public class MatrixLoader implements KeyListener {
 					}
 					juJitsuTimer = new Timer();
 					juJitsuTask = new JuJitsuTask();
+					juJitsuTextImg.setVisible(true);
 					juJitsuSlides.setVisible(true);
 					progressBar.setVisible(true);
 					juJitsuTimer.schedule(juJitsuTask, 0, 2000);
@@ -385,23 +413,24 @@ public class MatrixLoader implements KeyListener {
 				if(neoStatusImg.isVisible()){
 					diskProcess = 2;
 					progressBar.setMaximum(90);
-					if(!defenceCompleteImg.isVisible())
+					if(!defenseCompleteImg.isVisible())
 					{
 						progressBar.setValue(0);		//clear when insert after another disk
-					}
-					defenceTimer = new Timer();
-					defenceTask = new DefenceTask();
-					defenceSlides.setVisible(true);
+					}					
+					defenseTimer = new Timer();
+					defenseTask = new DefenseTask();
+					defenseTextImg.setVisible(true);
+					defenseSlides.setVisible(true);
 					progressBar.setVisible(true);
-					defenceTimer.schedule(defenceTask, 0, 2000);	
+					defenseTimer.schedule(defenseTask, 0, 2000);	
 				}							
 				break;
 			case DISK2_DISCONNECTED:
 				if(neoStatusImg.isVisible()){
 					diskProcess = 0;
-					defenceTask.cancel();		//stopping open threads
-					defenceTimer.cancel();
-					defenceStop();
+					defenseTask.cancel();		//stopping open threads
+					defenseTimer.cancel();
+					defenseStop();
 				}				
 				break;
 			case DISK3_CONNECTED:
@@ -414,6 +443,7 @@ public class MatrixLoader implements KeyListener {
 					}
 					spSkillsTimer = new Timer();
 					spSkillsTask = new SpSkillsTask();
+					spSkillsTextImg.setVisible(true);
 					spSkillsSlides.setVisible(true);
 					progressBar.setVisible(true);
 					spSkillsTimer.schedule(spSkillsTask, 0, 2000);			

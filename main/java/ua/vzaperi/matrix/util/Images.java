@@ -4,6 +4,7 @@ public final class Images {
 	public static final String BASE = "NEO_interface_initial_screen.jpg"; 
 	public static final String NEO_CONNECTED = "connected.jpg";
 	
+	public static final String FIRST_SKILL_TEXT = "ju_jitsu_text.jpg";
 	public static final String FIRST_SKILL_UPLOAD = "ju_jitsu_uploading.jpg";
 	public static final String FIRST_SKILL_COMPLETE = "ju_jitsu_complete.jpg";
 	public static final String[] FIRST_SKILL_SLIDES = {
@@ -11,9 +12,11 @@ public final class Images {
 			"jujitsu_6.jpg", "jujitsu_7.jpg", "jujitsu_8.jpg", "jujitsu_9.jpg"
 			};
 	
+	public static final String SECOND_SKILL_TEXT = "defence_text.jpg";
 	public static final String SECOND_SKILL_UPLOAD = "defence_uploading.jpg";
 	public static final String SECOND_SKILL_COMPLETE = "defence_complete.jpg";
 	
+	public static final String THIRD_SKILL_TEXT = "special_skills_text.jpg";
 	public static final String THIRD_SKILL_UPLOAD = "special_skills_uploading.jpg";
 	public static final String THIRD_SKILL_COMPLETE = "special_skills_complete.jpg";
 	public static final String THIRD_SKILL_STOPPED = "special_skills_stopped.jpg";

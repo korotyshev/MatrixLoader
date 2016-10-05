@@ -16,10 +16,10 @@ public final class Resolution {
 	public static final int PROGRESS_BAR_WIDTH = 491;
 	public static final int PROGRESS_BAR_HEIGHT = 37;
 	
-	public static final int SKILL_TITLE_X = 0;
-	public static final int SKILL_TITLE_Y = 0;
-	public static final int SKILL_TITLE_WIDTH = 0;
-	public static final int SKILL_TITLE_HEIGHT = 0;
+	public static final int SKILL_TITLE_X = 176;
+	public static final int SKILL_TITLE_Y = 665;
+	public static final int SKILL_TITLE_WIDTH = 245;
+	public static final int SKILL_TITLE_HEIGHT = 53;
 	
 	public static final int SKILL_SCREEN_X = 95;
 	public static final int SKILL_SCREEN_Y = 109;
