@@ -54,8 +54,9 @@ public class MatrixLoader implements KeyListener {
 	private Timer spSkillsTimer;
 	private TimerTask spSkillsTask;		//3rd skill timer and task
 	
-	private int i = 0; 				// iterator
+	private int i = 0, j = 0; 				// iterators
 	private int diskProcess = 0;	// case for what disk is processing now
+	private int diskIdentifier[] = {-1, -1, -1, 49, 50, 8};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
 	
 	private Color foregroundColor = new Color(43, 153, 214);     // #2b99d6
 	private Color backgroundColor = new Color(7, 25, 45);		//#07192d
@@ -217,6 +218,7 @@ public class MatrixLoader implements KeyListener {
 			}
 			else{
 				if(i < 9){
+					progressBar.setValue(90);
 					juJitsuSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
 					i++;
 				}
@@ -254,6 +256,7 @@ public class MatrixLoader implements KeyListener {
 			}
 			else{
 				if(i < 9){
+					progressBar.setValue(90);
 					defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
 					i++;
 				}
@@ -290,7 +293,7 @@ public class MatrixLoader implements KeyListener {
 				}
 			}
 			else{
-				if(i == 19){
+				if(i == 19 && !cureDisk3){
 					spSkillsUploadImg.setVisible(false);
 					spSkillsStoppedImg.setVisible(true);
 					attackReleased = true;
@@ -302,6 +305,7 @@ public class MatrixLoader implements KeyListener {
 					}
 				}
 				if(i < 25 && cureDisk3){
+					progressBar.setValue(100);
 					spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[i]));			//insert into complete program
 					i++;
 				}
@@ -325,20 +329,22 @@ public class MatrixLoader implements KeyListener {
 	}
 	
 	private void cableDisconnect(){
-		switch(diskProcess){
-		case 1:
-			juJitsuTask.cancel();
-			juJitsuTimer.cancel();
-			break;
-		case 2:
-			defenseTask.cancel();
-			defenseTimer.cancel();			//closing still open threads
-			break;
-		case 3:
-			spSkillsTask.cancel();
-			spSkillsTimer.cancel();
-			break;
-		}
+		if(neoStatusImg.isVisible()){
+			switch(diskProcess){
+			case 1:
+				juJitsuTask.cancel();
+				juJitsuTimer.cancel();
+				break;
+			case 2:
+				defenseTask.cancel();
+				defenseTimer.cancel();			//closing still open threads
+				break;
+			case 3:
+				spSkillsTask.cancel();
+				spSkillsTimer.cancel();
+				break;
+			}
+		}	
 		
 		i = 0;
 		
@@ -386,8 +392,8 @@ public class MatrixLoader implements KeyListener {
 				cableDisconnect();
 				break;
 			case DISK1_CONNECTED:
+				diskProcess = 1;
 				if(neoStatusImg.isVisible()){
-					diskProcess = 1;
 					progressBar.setMaximum(90);
 					if(!juJitsuCompleteImg.isVisible())
 					{
@@ -402,16 +408,16 @@ public class MatrixLoader implements KeyListener {
 				}							
 				break;
 			case DISK1_DISCONNECTED:
-				if(neoStatusImg.isVisible()){
-					diskProcess = 0;
+				diskProcess = 0;
+				if(neoStatusImg.isVisible()){					
 					juJitsuTask.cancel();		//stopping open threads
 					juJitsuTimer.cancel();				
 					juJitsuStop();					
 				}				
 				break;
 			case DISK2_CONNECTED:
+				diskProcess = 2;
 				if(neoStatusImg.isVisible()){
-					diskProcess = 2;
 					progressBar.setMaximum(90);
 					if(!defenseCompleteImg.isVisible())
 					{
@@ -426,16 +432,16 @@ public class MatrixLoader implements KeyListener {
 				}							
 				break;
 			case DISK2_DISCONNECTED:
+				diskProcess = 0;
 				if(neoStatusImg.isVisible()){
-					diskProcess = 0;
 					defenseTask.cancel();		//stopping open threads
 					defenseTimer.cancel();
 					defenseStop();
 				}				
 				break;
 			case DISK3_CONNECTED:
+				diskProcess = 3;
 				if(neoStatusImg.isVisible()){
-					diskProcess = 3;
 					progressBar.setMaximum(100);
 					if(!spSkillsCompleteImg.isVisible())
 					{
@@ -450,8 +456,8 @@ public class MatrixLoader implements KeyListener {
 				}					
 				break;
 			case DISK3_DISCONNECTED:
+				diskProcess = 0;
 				if(neoStatusImg.isVisible()){
-					diskProcess = 0;
 					spSkillsTask.cancel();		//stopping open threads
 					spSkillsTimer.cancel();
 					spSkillsStop();
@@ -462,6 +468,21 @@ public class MatrixLoader implements KeyListener {
 				break;
 		}
 	}
+	
+	private int diskIdentify(KeyEvent key){
+		for(int k = 0; k < 6; k++)
+		{
+			if(key.getKeyCode() == diskIdentifier[k]){		// key already exist
+				return k;
+			}				
+		}
+		if(j < 3 && neoStatusImg.isVisible()){
+			diskIdentifier[j] = key.getKeyCode();			// add new disk
+			j++;
+			return j-1;				
+		}
+		return -1;
+	}
 
 	////// KeyListener - only for testing!
 	
@@ -470,31 +491,51 @@ public class MatrixLoader implements KeyListener {
 
 	@Override
 	public void keyPressed(KeyEvent e) {
-		switch (e.getKeyCode()) {
-		case KeyEvent.VK_1:
-			processEvent(NEO_CONNECTED);
-			break;
-		case KeyEvent.VK_2:
-			processEvent(NEO_DISCONNECTED);
-			break;
-		case KeyEvent.VK_3:
+		switch (diskIdentify(e)) {
+		case 0:
 			processEvent(DISK1_CONNECTED);
 			break;
-		case KeyEvent.VK_4:
-			processEvent(DISK1_DISCONNECTED);
-			break;				
-		case KeyEvent.VK_5:
+		case 1:
 			processEvent(DISK2_CONNECTED);
-			break;
-		case KeyEvent.VK_6:
-			processEvent(DISK2_DISCONNECTED);
-			break;
-		case KeyEvent.VK_7:
+			break;		
+		case 2:
 			processEvent(DISK3_CONNECTED);
-			break;
-		case KeyEvent.VK_8:
-			processEvent(DISK3_DISCONNECTED);
 			break;	
+		case 3:
+			processEvent(NEO_CONNECTED);
+			if(diskProcess == 1 && !disk1){
+				processEvent(DISK1_CONNECTED);
+				break;
+			}
+			if(diskProcess == 2 && !disk2){
+				processEvent(DISK2_CONNECTED);			// when upload disk inside and cable reconnect
+				break;
+			}
+			if(diskProcess == 3 && !disk3){
+				processEvent(DISK3_CONNECTED);
+				break;
+			}			
+			break;
+		case 4:
+			processEvent(NEO_DISCONNECTED);
+			break;		
+		case 5:
+			switch (diskProcess){
+			case 1:
+				processEvent(DISK1_DISCONNECTED);
+				break;	
+			case 2:
+				processEvent(DISK2_DISCONNECTED);		// output the disk
+				break;
+			case 3:
+				processEvent(DISK3_DISCONNECTED);
+				break;
+			default:
+					break;
+			}
+			break;
+		default:
+			break;
 		}
 	}
 
