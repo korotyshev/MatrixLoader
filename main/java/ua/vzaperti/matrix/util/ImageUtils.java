@@ -1,4 +1,4 @@
-package ua.vzaperi.matrix.util;
+package ua.vzaperti.matrix.util;
 
 import java.util.HashMap;
 

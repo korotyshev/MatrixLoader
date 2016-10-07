@@ -1,4 +1,4 @@
-package ua.vzaperi.matrix.util;
+package ua.vzaperti.matrix.util;
 
 public final class Resolution {
 	public static final int SCREEN_X = 0;

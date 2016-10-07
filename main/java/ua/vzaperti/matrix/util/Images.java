@@ -1,4 +1,4 @@
-package ua.vzaperi.matrix.util;
+package ua.vzaperti.matrix.util;
 
 public final class Images {
 	public static final String BASE = "NEO_interface_initial_screen.jpg"; 

@@ -1,7 +1,7 @@
-package ua.vzaperi.matrix;
+package ua.vzaperti.matrix;
 
-import static ua.vzaperi.matrix.util.ImageUtils.getImage;
-import static ua.vzaperi.matrix.util.MatrixLoaderEvents.*;
+import static ua.vzaperti.matrix.util.ImageUtils.getImage;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.*;
 
 import java.awt.Color;
 import java.awt.EventQueue;
@@ -15,9 +15,10 @@ import javax.swing.JProgressBar;
 import java.util.Timer;
 import java.util.TimerTask;
 
-import ua.vzaperi.matrix.util.MatrixLoaderEvents;
-import ua.vzaperi.matrix.util.Images;
-import ua.vzaperi.matrix.util.Resolution;
+import ua.vzaperti.util.Config;
+import ua.vzaperti.matrix.util.Images;
+import ua.vzaperti.matrix.util.MatrixLoaderEvents;
+import ua.vzaperti.matrix.util.Resolution;
 
 public class MatrixLoader implements KeyListener {
 
@@ -66,6 +67,7 @@ public class MatrixLoader implements KeyListener {
 	private boolean disk3 = false; 					 
 	private boolean attackReleased = false;		//flags for attack releasing
 	private boolean cureDisk3 = false;
+	
 	/**
 	 * Launch the application.
 	 */
@@ -80,6 +82,10 @@ public class MatrixLoader implements KeyListener {
 				}
 			}
 		});
+		
+
+		// read properties file
+		Config.initConfig("matrixLoader.properties"); 
 	}
 
 	/**
