@@ -45,4 +45,9 @@ public final class Resolution {
 	public static final int THIRD_SKILL_Y = 396;
 	public static final int THIRD_SKILL_WIDTH = 249;
 	public static final int THIRD_SKILL_HEIGHT = 98;
+	
+	public static final int DEATH_X = 434;
+	public static final int DEATH_Y = 148;
+	public static final int DEATH_WIDTH = 192;
+	public static final int DEATH_HEIGHT = 263;
 }

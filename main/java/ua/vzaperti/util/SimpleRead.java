@@ -30,7 +30,7 @@ public class SimpleRead implements SerialPortEventListener {
 	    addByteListener(listener);
 	    init();
 	}
-
+	
 	private void init() throws IOException {
 	    Enumeration<?> portList = CommPortIdentifier.getPortIdentifiers();
 
@@ -93,8 +93,8 @@ public class SimpleRead implements SerialPortEventListener {
 		case SerialPortEvent.OUTPUT_BUFFER_EMPTY:
 			log.info("OUTPUT_BUFFER_EMPTY");
 			break;
-		case SerialPortEvent.DATA_AVAILABLE:
-			try {
+		case SerialPortEvent.DATA_AVAILABLE:			
+			try {				
 				while (inputStream.ready()/*available() > 0*/) {
 				    int read = 0;
 				    synchronized (this) {
@@ -102,8 +102,10 @@ public class SimpleRead implements SerialPortEventListener {
                     }
 					if (read>0)
 					    for (COMByteListener l: listeners)
-					        l.comByteProcess(read);
-				}
+					    {
+					        l.comByteProcess(read);							
+					    }					
+				}				
 			} catch (IOException e) {log.error("Error while reading from COM port", e);}
 			break;
 		}

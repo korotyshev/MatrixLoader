@@ -5,8 +5,7 @@ import static ua.vzaperti.matrix.util.MatrixLoaderEvents.*;
 
 import java.awt.Color;
 import java.awt.EventQueue;
-import java.awt.event.KeyEvent;
-import java.awt.event.KeyListener;
+import java.io.IOException;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -15,17 +14,22 @@ import javax.swing.JProgressBar;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import ua.vzaperti.util.COMByteListener;
 import ua.vzaperti.util.Config;
+import ua.vzaperti.util.SimpleRead;
 import ua.vzaperti.matrix.util.Images;
 import ua.vzaperti.matrix.util.MatrixLoaderEvents;
 import ua.vzaperti.matrix.util.Resolution;
 
-public class MatrixLoader implements KeyListener {
+public class MatrixLoader implements COMByteListener {
+	
+	private static final int IMAGE_TIME = 300;
 
 	private JFrame frame;
 	
 	private JLabel backgroundImg;		//background label
 	private JLabel neoStatusImg;		//cable connect label
+	private JLabel deathImg;
 	
 	private JLabel juJitsuTextImg;
 	private JLabel juJitsuUploadImg;
@@ -57,7 +61,8 @@ public class MatrixLoader implements KeyListener {
 	
 	private int i = 0, j = 0; 				// iterators
 	private int diskProcess = 0;	// case for what disk is processing now
-	private int diskIdentifier[] = {-1, -1, -1, 49, 50, 8};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
+	private int diskIdentifier[] = {-1, -1, -1, 2, 3, 5, 7, 9, 10};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
+	private int previous = -1;
 	
 	private Color foregroundColor = new Color(43, 153, 214);     // #2b99d6
 	private Color backgroundColor = new Color(7, 25, 45);		//#07192d
@@ -68,10 +73,15 @@ public class MatrixLoader implements KeyListener {
 	private boolean attackReleased = false;		//flags for attack releasing
 	private boolean cureDisk3 = false;
 	
+	private SimpleRead comPort;
+	
 	/**
 	 * Launch the application.
 	 */
 	public static void main(String[] args) {
+		// read properties file
+		Config.initConfig("matrixLoader.properties"); 
+
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {
@@ -82,19 +92,19 @@ public class MatrixLoader implements KeyListener {
 				}
 			}
 		});
-		
-
-		// read properties file
-		Config.initConfig("matrixLoader.properties"); 
 	}
 
 	/**
 	 * Create the application.
 	 */
 	public MatrixLoader() {
-		initialize();		
+		try {
+			comPort = new SimpleRead(this);
+			initialize();		
+		} catch (IOException e) {
+			e.printStackTrace();
+		}
 	}
-
 	/**
 	 * Initialize the contents of the frame.
 	 */
@@ -104,9 +114,7 @@ public class MatrixLoader implements KeyListener {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	//frame
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
-		frame.setUndecorated(true);
-		
-		frame.addKeyListener(this);
+		frame.setUndecorated(true);	
 				
 		neoStatusImg = new JLabel("");
 		neoStatusImg.setBounds(Resolution.NEO_X, Resolution.NEO_Y, Resolution.NEO_WIDTH, Resolution.NEO_HEIGHT);
@@ -178,7 +186,13 @@ public class MatrixLoader implements KeyListener {
 		attackImg.setBounds(Resolution.ATTACK_MSG_X, Resolution.ATTACK_MSG_Y, Resolution.ATTACK_MSG_WIDTH, Resolution.ATTACK_MSG_HEIGHT);
 		attackImg.setIcon(getImage(Images.ATTACK_MESSAGE)); 							//attack - red image
 		frame.getContentPane().add(attackImg);
-		attackImg.setVisible(false);
+		attackImg.setVisible(false);		
+		
+		deathImg = new JLabel("");
+		deathImg.setBounds(Resolution.DEATH_X, Resolution.DEATH_Y, Resolution.DEATH_WIDTH, Resolution.DEATH_HEIGHT);
+		deathImg.setIcon(getImage(Images.DEATH)); 							//death image
+		frame.getContentPane().add(deathImg);
+		deathImg.setVisible(false);
 		
 		juJitsuSlides = new JLabel("");				
 		juJitsuSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
@@ -190,7 +204,7 @@ public class MatrixLoader implements KeyListener {
 		
 		spSkillsSlides = new JLabel("");				
 		spSkillsSlides.setBounds(Resolution.SKILL_SCREEN_X, Resolution.SKILL_SCREEN_Y, Resolution.SKILL_SCREEN_WIDTH, Resolution.SKILL_SCREEN_HEIGHT);
-		frame.getContentPane().add(spSkillsSlides); 									//sp skills slides
+		frame.getContentPane().add(spSkillsSlides);									//sp skills slides		
 		
 		progressBar = new JProgressBar();
 		progressBar.setBackground(backgroundColor);
@@ -212,22 +226,19 @@ public class MatrixLoader implements KeyListener {
 			if(!juJitsuCompleteImg.isVisible())
 			{
 				juJitsuUploadImg.setVisible(true);
-				progressBar.setValue(progressBar.getValue() + 10);
+				progressBar.setValue(progressBar.getValue() + 3);
 				juJitsuSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));			//upload disk
 				i++;
-				if(i == 9){
+				if(i == 28){
 					disk1 = true;
 					juJitsuUploadImg.setVisible(false);
 					juJitsuCompleteImg.setVisible(true);				//upload complete
 					return;
 				}
 			}
-			else{
-				if(i < 9){
-					progressBar.setValue(90);
-					juJitsuSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
-					i++;
-				}
+			else{				
+				progressBar.setValue(84);
+				juJitsuSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[27]));		//insert into complete program				
 			}
 		}
 	}
@@ -250,22 +261,19 @@ public class MatrixLoader implements KeyListener {
 			if(!defenseCompleteImg.isVisible())
 			{
 				defenseUploadImg.setVisible(true);
-				progressBar.setValue(progressBar.getValue() + 10);
-				defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));			//upload disk
+				progressBar.setValue(progressBar.getValue() + 4);
+				defenseSlides.setIcon(getImage(Images.SECOND_SKILL_SLIDES[i]));			//upload disk
 				i++;
-				if(i == 9){
+				if(i == 23){
 					disk2 = true;
 					defenseUploadImg.setVisible(false);
 					defenseCompleteImg.setVisible(true);				//upload complete
 					return;
 				}
 			}
-			else{
-				if(i < 9){
-					progressBar.setValue(90);
-					defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[i]));		//insert into complete program
-					i++;
-				}
+			else{		
+				progressBar.setValue(100);
+				defenseSlides.setIcon(getImage(Images.SECOND_SKILL_SLIDES[22]));		//insert into complete program							
 			}
 		}
 	}
@@ -274,7 +282,7 @@ public class MatrixLoader implements KeyListener {
 		defenseTextImg.setVisible(false);
 		progressBar.setVisible(false);
 		defenseSlides.setVisible(false);
-		defenseSlides.setIcon(getImage(Images.FIRST_SKILL_SLIDES[0]));		//output from complete program
+		defenseSlides.setIcon(getImage(Images.SECOND_SKILL_SLIDES[0]));		//output from complete program
 		i = 0;
 		if(!defenseCompleteImg.isVisible())
 		{
@@ -284,8 +292,16 @@ public class MatrixLoader implements KeyListener {
 	}
 	
 	class SpSkillsTask extends TimerTask{
-		public void run(){			
-			if(!spSkillsCompleteImg.isVisible() && (i != 19 || cureDisk3))
+		public void run(){
+			if(attackReleased && !cureDisk3){
+				spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[18]));
+				if(attackImg.isVisible()){
+					attackImg.setVisible(false);			//attack released
+				}
+				else{
+					attackImg.setVisible(true);
+				}				
+			}else if(!spSkillsCompleteImg.isVisible() && (i != 19 || cureDisk3))
 			{
 				spSkillsUploadImg.setVisible(true);
 				progressBar.setValue(progressBar.getValue() + 4);
@@ -310,10 +326,9 @@ public class MatrixLoader implements KeyListener {
 						attackImg.setVisible(true);
 					}
 				}
-				if(i < 25 && cureDisk3){
+				if(cureDisk3){					
 					progressBar.setValue(100);
-					spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[i]));			//insert into complete program
-					i++;
+					spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[24]));		//insert into complete program					
 				}
 			}
 		}
@@ -332,7 +347,7 @@ public class MatrixLoader implements KeyListener {
 			spSkillsUploadImg.setVisible(false);
 			progressBar.setValue(0);
 		}						
-	}
+	}	
 	
 	private void cableDisconnect(){
 		if(neoStatusImg.isVisible()){
@@ -372,35 +387,45 @@ public class MatrixLoader implements KeyListener {
 		spSkillsCompleteImg.setVisible(false);
 		spSkillsStoppedImg.setVisible(false);
 		spSkillsSlides.setVisible(false);
-		attackImg.setVisible(false);
-		
-		if(attackReleased)
-		{
-			cureDisk3 = true;		//disk 3 can be upload to full
-		}	
+		attackImg.setVisible(false);		
 	}
 	
 	private void processEvent(MatrixLoaderEvents event) {
 		switch (event) {
 			case NEO_CONNECTED: 
 				neoStatusImg.setVisible(true);
-				if(disk1){
+				if(disk1) {					
 					juJitsuCompleteImg.setVisible(true);					
 				}
+				else if(diskProcess == 1) {
+					processEvent(DISK1_CONNECTED);					
+				}
+				
 				if(disk2){					
-					defenseCompleteImg.setVisible(true);
+					defenseCompleteImg.setVisible(true);					
+				}else if(diskProcess == 2) {
+					processEvent(DISK2_CONNECTED);
+					break;
 				}
-				if(disk3){
-					spSkillsCompleteImg.setVisible(true);
-				}
+				
+				if(disk3){					
+					spSkillsCompleteImg.setVisible(true);					
+				}else if(diskProcess == 3){
+					processEvent(DISK3_CONNECTED);
+					break;
+				}				
 				break;
 			case NEO_DISCONNECTED:				
 				cableDisconnect();
 				break;
 			case DISK1_CONNECTED:
-				diskProcess = 1;
+				if(attackReleased && !cureDisk3){
+					processEvent(DISK3_CONNECTED);					
+					break;
+				}
+				diskProcess = 1;				
 				if(neoStatusImg.isVisible()){
-					progressBar.setMaximum(90);
+					progressBar.setMaximum(84);
 					if(!juJitsuCompleteImg.isVisible())
 					{
 						progressBar.setValue(0);		//clear when insert after another disk
@@ -410,10 +435,14 @@ public class MatrixLoader implements KeyListener {
 					juJitsuTextImg.setVisible(true);
 					juJitsuSlides.setVisible(true);
 					progressBar.setVisible(true);
-					juJitsuTimer.schedule(juJitsuTask, 0, 2000);
+					juJitsuTimer.schedule(juJitsuTask, 0, IMAGE_TIME);
 				}							
 				break;
 			case DISK1_DISCONNECTED:
+				if(attackReleased && !cureDisk3){
+					processEvent(DISK3_DISCONNECTED);
+					break;
+				}
 				diskProcess = 0;
 				if(neoStatusImg.isVisible()){					
 					juJitsuTask.cancel();		//stopping open threads
@@ -422,9 +451,13 @@ public class MatrixLoader implements KeyListener {
 				}				
 				break;
 			case DISK2_CONNECTED:
+				if(attackReleased && !cureDisk3){
+					processEvent(DISK3_CONNECTED);					
+					break;					
+				}
 				diskProcess = 2;
 				if(neoStatusImg.isVisible()){
-					progressBar.setMaximum(90);
+					progressBar.setMaximum(92);
 					if(!defenseCompleteImg.isVisible())
 					{
 						progressBar.setValue(0);		//clear when insert after another disk
@@ -434,10 +467,14 @@ public class MatrixLoader implements KeyListener {
 					defenseTextImg.setVisible(true);
 					defenseSlides.setVisible(true);
 					progressBar.setVisible(true);
-					defenseTimer.schedule(defenseTask, 0, 2000);	
+					defenseTimer.schedule(defenseTask, 0, IMAGE_TIME);	
 				}							
 				break;
 			case DISK2_DISCONNECTED:
+				if(attackReleased && !cureDisk3){
+					processEvent(DISK3_DISCONNECTED);
+					break;
+				}
 				diskProcess = 0;
 				if(neoStatusImg.isVisible()){
 					defenseTask.cancel();		//stopping open threads
@@ -445,7 +482,7 @@ public class MatrixLoader implements KeyListener {
 					defenseStop();
 				}				
 				break;
-			case DISK3_CONNECTED:
+			case DISK3_CONNECTED:				
 				diskProcess = 3;
 				if(neoStatusImg.isVisible()){
 					progressBar.setMaximum(100);
@@ -458,7 +495,7 @@ public class MatrixLoader implements KeyListener {
 					spSkillsTextImg.setVisible(true);
 					spSkillsSlides.setVisible(true);
 					progressBar.setVisible(true);
-					spSkillsTimer.schedule(spSkillsTask, 0, 2000);			
+					spSkillsTimer.schedule(spSkillsTask, 0, IMAGE_TIME);			
 				}					
 				break;
 			case DISK3_DISCONNECTED:
@@ -468,36 +505,62 @@ public class MatrixLoader implements KeyListener {
 					spSkillsTimer.cancel();
 					spSkillsStop();
 				}				
-				break; 
+				break;
+			case EMP_PRESSED:
+				if(attackReleased && !neoStatusImg.isVisible())
+				{
+					cureDisk3 = true;
+				}
+				else if(attackReleased && neoStatusImg.isVisible())
+				{					
+					for(int i = 0; i<10; i++){
+						if(!deathImg.isVisible())
+						{
+							deathImg.setVisible(true);
+						}
+						else
+						{
+							deathImg.setVisible(false);
+						}
+						try {
+							Thread.sleep(250);
+						} catch (InterruptedException e) {
+							// TODO Auto-generated catch block
+							e.printStackTrace();
+						}
+					}
+				}
+				break;
 			default:
 				// nothing
 				break;
 		}
 	}
-	
-	private int diskIdentify(KeyEvent key){
-		for(int k = 0; k < 6; k++)
+
+	private int diskIdentify(int value){		
+		for(int k = 0; k < 9; k++)
 		{
-			if(key.getKeyCode() == diskIdentifier[k]){		// key already exist
+			if(value == diskIdentifier[k]){		// key already exist
+				if(value == 5 && value == 6 && value == 7){
+					previous = -1;
+				}
 				return k;
 			}				
 		}
 		if(j < 3 && neoStatusImg.isVisible()){
-			diskIdentifier[j] = key.getKeyCode();			// add new disk
+			diskIdentifier[j] = value;			// add new disk
 			j++;
+			previous = -1;
 			return j-1;				
 		}
+		if(previous != value){
+			previous = value;
+		}				
 		return -1;
 	}
-
-	////// KeyListener - only for testing!
-	
 	@Override
-	public void keyTyped(KeyEvent e) {}
-
-	@Override
-	public void keyPressed(KeyEvent e) {
-		switch (diskIdentify(e)) {
+	public void comByteProcess(int i) {
+		switch (diskIdentify(i)) {
 		case 0:
 			processEvent(DISK1_CONNECTED);
 			break;
@@ -509,23 +572,39 @@ public class MatrixLoader implements KeyListener {
 			break;	
 		case 3:
 			processEvent(NEO_CONNECTED);
-			if(diskProcess == 1 && !disk1){
-				processEvent(DISK1_CONNECTED);
-				break;
+			if(previous != -1){				
+				switch(diskIdentify(previous)) {
+				case 0:
+					processEvent(DISK1_CONNECTED);
+					break;
+				case 1:
+					processEvent(DISK2_CONNECTED);
+					break;		
+				case 2:
+					processEvent(DISK3_CONNECTED);
+					break;	
+				}
 			}
-			if(diskProcess == 2 && !disk2){
-				processEvent(DISK2_CONNECTED);			// when upload disk inside and cable reconnect
-				break;
-			}
-			if(diskProcess == 3 && !disk3){
-				processEvent(DISK3_CONNECTED);
-				break;
-			}			
 			break;
 		case 4:
 			processEvent(NEO_DISCONNECTED);
 			break;		
-		case 5:
+		case 5:	
+			switch (diskProcess){
+			case 1:
+				processEvent(DISK1_DISCONNECTED);
+				break;	
+			case 2:
+				processEvent(DISK2_DISCONNECTED);		// output the disk
+				break;
+			case 3:
+				processEvent(DISK3_DISCONNECTED);
+				break;
+			default:
+					break;
+			}
+			break;	
+		case 6:
 			switch (diskProcess){
 			case 1:
 				processEvent(DISK1_DISCONNECTED);
@@ -540,11 +619,28 @@ public class MatrixLoader implements KeyListener {
 					break;
 			}
 			break;
+		case 7:
+			switch (diskProcess){
+			case 1:
+				processEvent(DISK1_DISCONNECTED);
+				break;	
+			case 2:
+				processEvent(DISK2_DISCONNECTED);		// output the disk
+				break;
+			case 3:
+				processEvent(DISK3_DISCONNECTED);
+				break;
+			default:
+					break;
+			}
+			break;
+		case 8:
+			processEvent(EMP_PRESSED);
+			break;						
 		default:
 			break;
 		}
-	}
-
-	@Override
-	public void keyReleased(KeyEvent e) {}	
+		//System.out.println("Received" + i);		
+	}	
 }
+
