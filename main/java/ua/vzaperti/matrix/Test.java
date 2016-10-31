@@ -12,7 +12,7 @@ import ua.vzaperti.util.VideoPanel;
 public class Test extends JFrame {
 
 	private static final long serialVersionUID = -6671518318930567262L;
-	private JPanel contentPane;
+	public static JPanel contentPane;
 	private ua.vzaperti.util.VideoPanel vp; 
 
 	/**
@@ -48,7 +48,7 @@ public class Test extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
-		vp = new VideoPanel("C:/ivms4200/video/2.mp4");
+		vp = new VideoPanel("D:/a.mp4");
 
 		contentPane.add(vp, BorderLayout.CENTER);
 	}

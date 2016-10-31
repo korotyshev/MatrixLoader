@@ -5,6 +5,8 @@ import static ua.vzaperti.matrix.util.MatrixLoaderEvents.*;
 
 import java.awt.Color;
 import java.awt.EventQueue;
+import java.awt.GraphicsDevice;
+import java.awt.GraphicsEnvironment;
 import java.io.IOException;
 
 import javax.swing.JFrame;
@@ -20,13 +22,15 @@ import ua.vzaperti.util.SimpleRead;
 import ua.vzaperti.matrix.util.Images;
 import ua.vzaperti.matrix.util.MatrixLoaderEvents;
 import ua.vzaperti.matrix.util.Resolution;
+import ua.vzaperti.matrix.Test;
 
 public class MatrixLoader implements COMByteListener {
 	
 	private static final int IMAGE_TIME = 300;
 
-	private JFrame frame;
-	
+	private static JFrame frame;
+	private static JFrame frame1;
+		
 	private JLabel backgroundImg;		//background label
 	private JLabel neoStatusImg;		//cable connect label
 	private JLabel deathImg;
@@ -84,15 +88,53 @@ public class MatrixLoader implements COMByteListener {
 
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
-				try {
-					MatrixLoader window = new MatrixLoader();
+				try {					
+					showOnScreen(0, frame);
+					showOnScreen(1, frame1);
+					/*MatrixLoader window = new MatrixLoader();
 					window.frame.setVisible(true);
+					Test video1 = new Test();
+					video1.setVisible(true);
+					video1.start();*/
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
 			}
 		});
 	}
+	
+	public static void showOnScreen( int screen, JFrame frame )
+	{
+	    GraphicsEnvironment ge = GraphicsEnvironment
+	        .getLocalGraphicsEnvironment();
+	    GraphicsDevice[] gs = ge.getScreenDevices();
+	    if( screen == 0)
+	    {	    	
+	        gs[screen].setFullScreenWindow( frame );
+	        MatrixLoader window = new MatrixLoader();
+			window.frame.setVisible(true);
+	    }
+	    else if( screen == 1 )
+	    {
+	    	frame1 = new JFrame();
+			frame1.setBounds(Resolution.SCREEN_X, Resolution.SCREEN_Y, Resolution.SCREEN_WIDTH, Resolution.SCREEN_HEIGHT);
+			frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+			frame1.getContentPane().add(Test.contentPane);
+			frame1.setResizable(false);
+			frame1.setUndecorated(true);	
+	        gs[screen].setFullScreenWindow(frame1);
+	    	Config.initConfig("test.properties"); 
+	        Test video1 = new Test();
+			video1.setVisible(true);
+			video1.start();
+	    }
+	    else
+	    {
+	        throw new RuntimeException( "No Screens Found" );
+	    }
+	}
+	
+	
 
 	/**
 	 * Create the application.
@@ -114,7 +156,7 @@ public class MatrixLoader implements COMByteListener {
 		frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);	//frame
 		frame.getContentPane().setLayout(null);
 		frame.setResizable(false);
-		frame.setUndecorated(true);	
+		frame.setUndecorated(true);
 				
 		neoStatusImg = new JLabel("");
 		neoStatusImg.setBounds(Resolution.NEO_X, Resolution.NEO_Y, Resolution.NEO_WIDTH, Resolution.NEO_HEIGHT);
