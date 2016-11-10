@@ -20,6 +20,7 @@ public class VideoPanel extends CanvasImage{
 	private long realTimeVideoStarted = 0;
 	private double aspectRatio = 1;
 	private String videoFile;
+	private Thread thread;
 
 	/**
 	 * @param videoFile Video file path
@@ -36,70 +37,78 @@ public class VideoPanel extends CanvasImage{
 	 * Start playing video. Panel should be already visible.  
 	 */
 	public void start() {
-		try {
-			stop = false;
-
-			video = new FFmpegFrameGrabber(videoFile);
-			video.start();
-			long videoLength = video.getLengthInTime()/1000;
-			long initialVideoTimeMs = 0;
-
-			System.out.println("Video length: "+videoLength);
-
-			int width = video.getImageWidth();
-			int height = video.getImageHeight();
-			aspectRatio = ((double)width)/height;
-			revalidate();
-			
-			
-			long videoTimeMs = 0;
-
-			while (!stop) {
-
+		
+		thread = new Thread(new Runnable()
+		{
+			public void run()
+			{
 				try {
-					Frame videoFrame = video.grabImage();
+					stop = false;
 
-					if (useVideo) {
-						videoTimeMs = video.getTimestamp()/1000;
+					video = new FFmpegFrameGrabber(videoFile);
+					video.start();
+					long videoLength = video.getLengthInTime()/1000;
+					long initialVideoTimeMs = 0;
 
-						if (videoFrame==null) {
-							if (initialVideoTimeMs>0 && videoTimeMs - initialVideoTimeMs > videoLength - 1000 ) {
-								video.restart();
-								realTimeVideoStarted = System.currentTimeMillis();
+					System.out.println("Video length: "+videoLength);
+
+					int width = video.getImageWidth();
+					int height = video.getImageHeight();
+					aspectRatio = ((double)width)/height;
+					revalidate();
+					
+					
+					long videoTimeMs = 0;
+
+					while (!stop) {
+
+						try {
+							Frame videoFrame = video.grabImage();
+
+							if (useVideo) {
+								videoTimeMs = video.getTimestamp()/1000;
+
+								if (videoFrame==null) {
+									if (initialVideoTimeMs>0 && videoTimeMs - initialVideoTimeMs > videoLength - 1000 ) {
+										video.restart();
+										realTimeVideoStarted = System.currentTimeMillis();
+									}
+									continue;
+								} else {
+									if (initialVideoTimeMs == 0) {
+										initialVideoTimeMs = video.getTimestamp()/1000;
+									}
+								}
 							}
-							continue;
-						} else {
-							if (initialVideoTimeMs == 0) {
-								initialVideoTimeMs = video.getTimestamp()/1000;
-							}
+
+							showImage(videoFrame);
+
+							long deltaTime = (videoTimeMs - initialVideoTimeMs) - (System.currentTimeMillis() - realTimeVideoStarted) + 10;
+
+							if (deltaTime > 0) {
+								Thread.sleep(deltaTime);
+							} 
+
+						} catch (Exception e) {
+							e.printStackTrace();
+						} finally {
+							
 						}
 					}
-
-					showImage(videoFrame);
-
-					long deltaTime = (videoTimeMs - initialVideoTimeMs) - (System.currentTimeMillis() - realTimeVideoStarted) + 10;
-
-					if (deltaTime > 0) {
-						Thread.sleep(deltaTime);
-					} 
 
 				} catch (Exception e) {
 					e.printStackTrace();
 				} finally {
-					
+					try {
+						if (video!=null)
+							video.stop();
+					} catch (Exception e) {
+						e.printStackTrace();
+					}
 				}
 			}
-
-		} catch (Exception e) {
-			e.printStackTrace();
-		} finally {
-			try {
-				if (video!=null)
-					video.stop();
-			} catch (Exception e) {
-				e.printStackTrace();
-			}
-		}
+		});
+		thread.start();		
 	}
 
 	@Override

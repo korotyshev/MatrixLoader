@@ -63,6 +63,9 @@ public class MatrixLoader implements COMByteListener {
 	private Timer spSkillsTimer;
 	private TimerTask spSkillsTask;		//3rd skill timer and task
 	
+	private Timer attackTimer;
+	private TimerTask attackTimerTask;
+	
 	private int i = 0, j = 0; 				// iterators
 	private int diskProcess = 0;	// case for what disk is processing now
 	private int diskIdentifier[] = {-1, -1, -1, 2, 3, 5, 7, 9, 10};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
@@ -76,6 +79,7 @@ public class MatrixLoader implements COMByteListener {
 	private boolean disk3 = false; 					 
 	private boolean attackReleased = false;		//flags for attack releasing
 	private boolean cureDisk3 = false;
+	private boolean proceed = false;
 	
 	private SimpleRead comPort;
 	
@@ -90,12 +94,7 @@ public class MatrixLoader implements COMByteListener {
 			public void run() {
 				try {					
 					showOnScreen(0, frame);
-					showOnScreen(1, frame1);
-					/*MatrixLoader window = new MatrixLoader();
-					window.frame.setVisible(true);
-					Test video1 = new Test();
-					video1.setVisible(true);
-					video1.start();*/
+					showOnScreen(1, frame1);					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -121,28 +120,22 @@ public class MatrixLoader implements COMByteListener {
 			frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame1.getContentPane().add(Test.contentPane);
 			frame1.setResizable(false);
-			frame1.setUndecorated(true);	
-	        gs[screen].setFullScreenWindow(frame1);
-	    	Config.initConfig("test.properties"); 
-	        Test video1 = new Test();
-			video1.setVisible(true);
-			video1.start();
+			frame1.setUndecorated(true);
+	        gs[screen].setFullScreenWindow(frame1);      
 	    }
 	    else
 	    {
 	        throw new RuntimeException( "No Screens Found" );
 	    }
-	}
-	
-	
+	}	
 
 	/**
 	 * Create the application.
 	 */
 	public MatrixLoader() {
 		try {
-			comPort = new SimpleRead(this);
-			initialize();		
+			initialize();
+			comPort = new SimpleRead(this);					
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
@@ -335,15 +328,7 @@ public class MatrixLoader implements COMByteListener {
 	
 	class SpSkillsTask extends TimerTask{
 		public void run(){
-			if(attackReleased && !cureDisk3){
-				spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[18]));
-				if(attackImg.isVisible()){
-					attackImg.setVisible(false);			//attack released
-				}
-				else{
-					attackImg.setVisible(true);
-				}				
-			}else if(!spSkillsCompleteImg.isVisible() && (i != 19 || cureDisk3))
+			if(!spSkillsCompleteImg.isVisible() && (i != 19 || cureDisk3))
 			{
 				spSkillsUploadImg.setVisible(true);
 				progressBar.setValue(progressBar.getValue() + 4);
@@ -391,6 +376,20 @@ public class MatrixLoader implements COMByteListener {
 		}						
 	}	
 	
+	class AttackTask extends TimerTask{
+		public void run(){
+			spSkillsSlides.setVisible(true);
+			spSkillsSlides.setIcon(getImage(Images.THIRD_SKILL_SLIDES[18]));
+			if(attackImg.isVisible()){
+				attackImg.setVisible(false);			//attack released
+			}
+			else{
+				attackImg.setVisible(true);
+			}
+			proceed = true;
+		}
+	}
+	
 	private void cableDisconnect(){
 		if(neoStatusImg.isVisible()){
 			switch(diskProcess){
@@ -429,7 +428,18 @@ public class MatrixLoader implements COMByteListener {
 		spSkillsCompleteImg.setVisible(false);
 		spSkillsStoppedImg.setVisible(false);
 		spSkillsSlides.setVisible(false);
-		attackImg.setVisible(false);		
+		attackImg.setVisible(false);
+		
+		if(attackReleased && !cureDisk3){
+			if(proceed){
+				attackTimer.cancel();
+				attackTimerTask.cancel();
+				proceed = false;
+			}
+			attackTimer = new Timer();
+			attackTimerTask = new AttackTask();
+			attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
+		}
 	}
 	
 	private void processEvent(MatrixLoaderEvents event) {
@@ -446,26 +456,42 @@ public class MatrixLoader implements COMByteListener {
 				if(disk2){					
 					defenseCompleteImg.setVisible(true);					
 				}else if(diskProcess == 2) {
-					processEvent(DISK2_CONNECTED);
-					break;
+					processEvent(DISK2_CONNECTED);					
 				}
 				
 				if(disk3){					
 					spSkillsCompleteImg.setVisible(true);					
 				}else if(diskProcess == 3){
-					processEvent(DISK3_CONNECTED);
-					break;
-				}				
+					processEvent(DISK3_CONNECTED);					
+				}
+				
+				if(attackReleased && !cureDisk3 && diskProcess == 0){
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);					
+				}
 				break;
 			case NEO_DISCONNECTED:				
 				cableDisconnect();
 				break;
-			case DISK1_CONNECTED:
+			case DISK1_CONNECTED:				
+				diskProcess = 1;
 				if(attackReleased && !cureDisk3){
-					processEvent(DISK3_CONNECTED);					
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
 					break;
 				}
-				diskProcess = 1;				
 				if(neoStatusImg.isVisible()){
 					progressBar.setMaximum(84);
 					if(!juJitsuCompleteImg.isVisible())
@@ -480,24 +506,38 @@ public class MatrixLoader implements COMByteListener {
 					juJitsuTimer.schedule(juJitsuTask, 0, IMAGE_TIME);
 				}							
 				break;
-			case DISK1_DISCONNECTED:
+			case DISK1_DISCONNECTED:				
+				diskProcess = 0;
 				if(attackReleased && !cureDisk3){
-					processEvent(DISK3_DISCONNECTED);
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
 					break;
 				}
-				diskProcess = 0;
 				if(neoStatusImg.isVisible()){					
 					juJitsuTask.cancel();		//stopping open threads
 					juJitsuTimer.cancel();				
 					juJitsuStop();					
 				}				
 				break;
-			case DISK2_CONNECTED:
-				if(attackReleased && !cureDisk3){
-					processEvent(DISK3_CONNECTED);					
-					break;					
-				}
+			case DISK2_CONNECTED:				
 				diskProcess = 2;
+				if(attackReleased && !cureDisk3){
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
+					break;
+				}
 				if(neoStatusImg.isVisible()){
 					progressBar.setMaximum(92);
 					if(!defenseCompleteImg.isVisible())
@@ -512,12 +552,19 @@ public class MatrixLoader implements COMByteListener {
 					defenseTimer.schedule(defenseTask, 0, IMAGE_TIME);	
 				}							
 				break;
-			case DISK2_DISCONNECTED:
+			case DISK2_DISCONNECTED:				
+				diskProcess = 0;
 				if(attackReleased && !cureDisk3){
-					processEvent(DISK3_DISCONNECTED);
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
 					break;
 				}
-				diskProcess = 0;
 				if(neoStatusImg.isVisible()){
 					defenseTask.cancel();		//stopping open threads
 					defenseTimer.cancel();
@@ -526,6 +573,17 @@ public class MatrixLoader implements COMByteListener {
 				break;
 			case DISK3_CONNECTED:				
 				diskProcess = 3;
+				if(attackReleased && !cureDisk3){
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
+					break;
+				}
 				if(neoStatusImg.isVisible()){
 					progressBar.setMaximum(100);
 					if(!spSkillsCompleteImg.isVisible())
@@ -542,6 +600,19 @@ public class MatrixLoader implements COMByteListener {
 				break;
 			case DISK3_DISCONNECTED:
 				diskProcess = 0;
+				if(attackReleased && !cureDisk3){
+					if(proceed){
+						attackTimer.cancel();
+						attackTimerTask.cancel();
+						proceed = false;
+					}
+					spSkillsTask.cancel();		//stopping open threads
+					spSkillsTimer.cancel();
+					attackTimer = new Timer();
+					attackTimerTask = new AttackTask();
+					attackTimer.schedule(attackTimerTask, 0, IMAGE_TIME);
+					break;
+				}
 				if(neoStatusImg.isVisible()){
 					spSkillsTask.cancel();		//stopping open threads
 					spSkillsTimer.cancel();
@@ -552,6 +623,11 @@ public class MatrixLoader implements COMByteListener {
 				if(attackReleased && !neoStatusImg.isVisible())
 				{
 					cureDisk3 = true;
+					attackTimer.cancel();
+					attackTimerTask.cancel();
+					proceed = false;
+					spSkillsSlides.setVisible(false);
+					attackImg.setVisible(false);
 				}
 				else if(attackReleased && neoStatusImg.isVisible())
 				{					
@@ -567,7 +643,6 @@ public class MatrixLoader implements COMByteListener {
 						try {
 							Thread.sleep(250);
 						} catch (InterruptedException e) {
-							// TODO Auto-generated catch block
 							e.printStackTrace();
 						}
 					}
@@ -583,7 +658,7 @@ public class MatrixLoader implements COMByteListener {
 		for(int k = 0; k < 9; k++)
 		{
 			if(value == diskIdentifier[k]){		// key already exist
-				if(value == 5 && value == 6 && value == 7){
+				if(value == 5 || value == 7 || value == 9){
 					previous = -1;
 				}
 				return k;
@@ -682,7 +757,7 @@ public class MatrixLoader implements COMByteListener {
 		default:
 			break;
 		}
-		//System.out.println("Received" + i);		
+		System.out.println("Received" + i);
 	}	
 }
 
