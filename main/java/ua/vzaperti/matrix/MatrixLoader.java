@@ -102,32 +102,62 @@ public class MatrixLoader implements COMByteListener {
 		});
 	}
 	
+
 	public static void showOnScreen( int screen, JFrame frame )
 	{
-	    GraphicsEnvironment ge = GraphicsEnvironment
-	        .getLocalGraphicsEnvironment();
+	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 	    GraphicsDevice[] gs = ge.getScreenDevices();
 	    if( screen == 0)
 	    {	    	
-	        gs[screen].setFullScreenWindow( frame );
 	        MatrixLoader window = new MatrixLoader();
+			window.frame.setBounds(gs[screen].getConfigurations()[0].getBounds());
 			window.frame.setVisible(true);
 	    }
 	    else if( screen == 1 )
 	    {
+	        Test video1 = new Test();
 	    	frame1 = new JFrame();
 			frame1.setBounds(Resolution.SCREEN_X, Resolution.SCREEN_Y, Resolution.SCREEN_WIDTH, Resolution.SCREEN_HEIGHT);
 			frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 			frame1.getContentPane().add(Test.contentPane);
 			frame1.setResizable(false);
-			frame1.setUndecorated(true);
-	        gs[screen].setFullScreenWindow(frame1);      
+			frame1.setUndecorated(true);	
+			frame1.setBounds(gs[screen].getConfigurations()[0].getBounds());
+			frame1.setVisible(true);
+			video1.start();
 	    }
 	    else
 	    {
 	        throw new RuntimeException( "No Screens Found" );
 	    }
-	}	
+	}
+
+//		public static void showOnScreen( int screen, JFrame frame )
+//	{
+//	    GraphicsEnvironment ge = GraphicsEnvironment
+//	        .getLocalGraphicsEnvironment();
+//	    GraphicsDevice[] gs = ge.getScreenDevices();
+//	    if( screen == 0)
+//	    {	    	
+//	        gs[screen].setFullScreenWindow( frame );
+//	        MatrixLoader window = new MatrixLoader();
+//			window.frame.setVisible(true);
+//	    }
+//	    else if( screen == 1 )
+//	    {
+//	    	frame1 = new JFrame();
+//			frame1.setBounds(Resolution.SCREEN_X, Resolution.SCREEN_Y, Resolution.SCREEN_WIDTH, Resolution.SCREEN_HEIGHT);
+//			frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//			frame1.getContentPane().add(Test.contentPane);
+//			frame1.setResizable(false);
+//			frame1.setUndecorated(true);
+//	        gs[screen].setFullScreenWindow(frame1);      
+//	    }
+//	    else
+//	    {
+//	        throw new RuntimeException( "No Screens Found" );
+//	    }
+//	}	
 
 	/**
 	 * Create the application.
