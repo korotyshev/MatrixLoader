@@ -1,35 +1,43 @@
 package ua.vzaperti.matrix;
 
 import static ua.vzaperti.matrix.util.ImageUtils.getImage;
-import static ua.vzaperti.matrix.util.MatrixLoaderEvents.*;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC1_CONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC1_DISCONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC2_CONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC2_DISCONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC3_CONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.DISC3_DISCONNECTED;
+import static ua.vzaperti.matrix.util.MatrixLoaderEvents.NOP;
 
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.GraphicsDevice;
 import java.awt.GraphicsEnvironment;
 import java.io.IOException;
+import java.util.Timer;
+import java.util.TimerTask;
 
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JProgressBar;
 
-import java.util.Timer;
-import java.util.TimerTask;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
-import ua.vzaperti.util.COMByteListener;
-import ua.vzaperti.util.Config;
-import ua.vzaperti.util.SimpleRead;
 import ua.vzaperti.matrix.util.Images;
 import ua.vzaperti.matrix.util.MatrixLoaderEvents;
 import ua.vzaperti.matrix.util.Resolution;
-import ua.vzaperti.matrix.Test;
+import ua.vzaperti.util.COMByteListener;
+import ua.vzaperti.util.Config;
+import ua.vzaperti.util.SimpleRead;
 
 public class MatrixLoader implements COMByteListener {
 	
+	Logger log = LoggerFactory.getLogger(getClass());
 	private static final int IMAGE_TIME = 300;
-
+	
 	private static JFrame frame;
-	private static JFrame frame1;
+	private static Test videoFrame;
 		
 	private JLabel backgroundImg;		//background label
 	private JLabel neoStatusImg;		//cable connect label
@@ -66,10 +74,14 @@ public class MatrixLoader implements COMByteListener {
 	private Timer attackTimer;
 	private TimerTask attackTimerTask;
 	
-	private int i = 0, j = 0; 				// iterators
-	private int diskProcess = 0;	// case for what disk is processing now
-	private int diskIdentifier[] = {-1, -1, -1, 2, 3, 5, 7, 9, 10};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
-	private int previous = -1;
+	private MatrixLoaderEvents diskMap[] = new MatrixLoaderEvents[3];
+
+	private int i = 0;
+	//private int j = 0; 				// iterators
+	//private int diskProcess = 0;	// case for what disk is processing now
+	//private int diskIdentifier[] = {-1, -1, -1, 2, 3, 5, 7, 9, 10};		// array to identify disk order: 1st, 2nd, 3rd, neo_cn, neo_out, disconnect	
+	//private int previous = -1;
+	private MatrixLoaderEvents currentDisk = NOP; 
 	
 	private Color foregroundColor = new Color(43, 153, 214);     // #2b99d6
 	private Color backgroundColor = new Color(7, 25, 45);		//#07192d
@@ -93,8 +105,25 @@ public class MatrixLoader implements COMByteListener {
 		EventQueue.invokeLater(new Runnable() {
 			public void run() {
 				try {					
-					showOnScreen(0, frame);
-					showOnScreen(1, frame1);					
+				    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+				    GraphicsDevice[] gs = ge.getScreenDevices();
+
+				    int main = Integer.parseInt(Config.getConfig().getProperty("screen.main"));
+				    int secondary = Integer.parseInt(Config.getConfig().getProperty("screen.video"));
+				    
+			        MatrixLoader window = new MatrixLoader();
+					window.frame.setBounds(gs[main].getConfigurations()[0].getBounds());
+					window.frame.setVisible(true);
+
+			    	videoFrame = new Test();
+			    	//frame1 = new JFrame();
+			    	videoFrame.setResizable(false);
+			    	videoFrame.setUndecorated(true);	
+			    	videoFrame.setBounds(gs[secondary].getConfigurations()[0].getBounds());
+			    	videoFrame.setVisible(true);
+			    	videoFrame.start();
+//					showOnScreen(0, frame);
+//					showOnScreen(1, videoFrame);					
 				} catch (Exception e) {
 					e.printStackTrace();
 				}
@@ -103,35 +132,20 @@ public class MatrixLoader implements COMByteListener {
 	}
 	
 
-	public static void showOnScreen( int screen, JFrame frame )
-	{
-	    GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-	    GraphicsDevice[] gs = ge.getScreenDevices();
-	    if( screen == 0)
-	    {	    	
-	        MatrixLoader window = new MatrixLoader();
-			window.frame.setBounds(gs[screen].getConfigurations()[0].getBounds());
-			window.frame.setVisible(true);
-	    }
-	    else if( screen == 1 )
-	    {
-	        Test video1 = new Test();
-	    	frame1 = new JFrame();
-			frame1.setBounds(Resolution.SCREEN_X, Resolution.SCREEN_Y, Resolution.SCREEN_WIDTH, Resolution.SCREEN_HEIGHT);
-			frame1.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-			frame1.getContentPane().add(Test.contentPane);
-			frame1.setResizable(false);
-			frame1.setUndecorated(true);	
-			frame1.setBounds(gs[screen].getConfigurations()[0].getBounds());
-			frame1.setVisible(true);
-			video1.start();
-	    }
-	    else
-	    {
-	        throw new RuntimeException( "No Screens Found" );
-	    }
-	}
-
+//	public static void showOnScreen( int screen, JFrame frame )
+//	{
+//	    if( screen == 0)
+//	    {	    	
+//	    }
+//	    else if( screen == 1 )
+//	    {
+//	    }
+//	    else
+//	    {
+//	        throw new RuntimeException( "No Screens Found" );
+//	    }
+//	}
+//
 //		public static void showOnScreen( int screen, JFrame frame )
 //	{
 //	    GraphicsEnvironment ge = GraphicsEnvironment
@@ -422,16 +436,16 @@ public class MatrixLoader implements COMByteListener {
 	
 	private void cableDisconnect(){
 		if(neoStatusImg.isVisible()){
-			switch(diskProcess){
-			case 1:
+			switch(currentDisk){
+			case DISC1_CONNECTED:
 				juJitsuTask.cancel();
 				juJitsuTimer.cancel();
 				break;
-			case 2:
+			case DISC2_CONNECTED:
 				defenseTask.cancel();
 				defenseTimer.cancel();			//closing still open threads
 				break;
-			case 3:
+			case DISC3_CONNECTED:
 				spSkillsTask.cancel();
 				spSkillsTimer.cancel();
 				break;
@@ -476,26 +490,29 @@ public class MatrixLoader implements COMByteListener {
 		switch (event) {
 			case NEO_CONNECTED: 
 				neoStatusImg.setVisible(true);
+				
 				if(disk1) {					
 					juJitsuCompleteImg.setVisible(true);					
-				}
-				else if(diskProcess == 1) {
-					processEvent(DISK1_CONNECTED);					
-				}
+				}/* else if(diskProcess == 1) {
+					processEvent(DISC1_CONNECTED);					
+				}*/
 				
 				if(disk2){					
 					defenseCompleteImg.setVisible(true);					
-				}else if(diskProcess == 2) {
-					processEvent(DISK2_CONNECTED);					
-				}
+				}/*else if(diskProcess == 2) {
+					processEvent(DISC2_CONNECTED);					
+				}*/
 				
 				if(disk3){					
 					spSkillsCompleteImg.setVisible(true);					
-				}else if(diskProcess == 3){
-					processEvent(DISK3_CONNECTED);					
-				}
+				}/*else if(diskProcess == 3){
+					processEvent(DISC3_CONNECTED);					
+				}*/
 				
-				if(attackReleased && !cureDisk3 && diskProcess == 0){
+				if (currentDisk != NOP)
+					processEvent(currentDisk);
+				
+				if(attackReleased && !cureDisk3 && currentDisk == NOP){
 					if(proceed){
 						attackTimer.cancel();
 						attackTimerTask.cancel();
@@ -509,8 +526,8 @@ public class MatrixLoader implements COMByteListener {
 			case NEO_DISCONNECTED:				
 				cableDisconnect();
 				break;
-			case DISK1_CONNECTED:				
-				diskProcess = 1;
+			case DISC1_CONNECTED:				
+				//diskProcess = 1;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -536,8 +553,8 @@ public class MatrixLoader implements COMByteListener {
 					juJitsuTimer.schedule(juJitsuTask, 0, IMAGE_TIME);
 				}							
 				break;
-			case DISK1_DISCONNECTED:				
-				diskProcess = 0;
+			case DISC1_DISCONNECTED:				
+				//diskProcess = 0;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -555,8 +572,8 @@ public class MatrixLoader implements COMByteListener {
 					juJitsuStop();					
 				}				
 				break;
-			case DISK2_CONNECTED:				
-				diskProcess = 2;
+			case DISC2_CONNECTED:				
+				//diskProcess = 2;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -582,8 +599,8 @@ public class MatrixLoader implements COMByteListener {
 					defenseTimer.schedule(defenseTask, 0, IMAGE_TIME);	
 				}							
 				break;
-			case DISK2_DISCONNECTED:				
-				diskProcess = 0;
+			case DISC2_DISCONNECTED:				
+				//diskProcess = 0;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -601,8 +618,8 @@ public class MatrixLoader implements COMByteListener {
 					defenseStop();
 				}				
 				break;
-			case DISK3_CONNECTED:				
-				diskProcess = 3;
+			case DISC3_CONNECTED:				
+				//diskProcess = 3;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -628,8 +645,8 @@ public class MatrixLoader implements COMByteListener {
 					spSkillsTimer.schedule(spSkillsTask, 0, IMAGE_TIME);			
 				}					
 				break;
-			case DISK3_DISCONNECTED:
-				diskProcess = 0;
+			case DISC3_DISCONNECTED:
+				//diskProcess = 0;
 				if(attackReleased && !cureDisk3){
 					if(proceed){
 						attackTimer.cancel();
@@ -684,110 +701,123 @@ public class MatrixLoader implements COMByteListener {
 		}
 	}
 
-	private int diskIdentify(int value){		
-		for(int k = 0; k < 9; k++)
-		{
-			if(value == diskIdentifier[k]){		// key already exist
-				if(value == 5 || value == 7 || value == 9){
-					previous = -1;
-				}
-				return k;
-			}				
-		}
-		if(j < 3 && neoStatusImg.isVisible()){
-			diskIdentifier[j] = value;			// add new disk
-			j++;
-			previous = -1;
-			return j-1;				
-		}
-		if(previous != value){
-			previous = value;
-		}				
-		return -1;
-	}
-	@Override
-	public void comByteProcess(int i) {
-		switch (diskIdentify(i)) {
-		case 0:
-			processEvent(DISK1_CONNECTED);
-			break;
-		case 1:
-			processEvent(DISK2_CONNECTED);
-			break;		
-		case 2:
-			processEvent(DISK3_CONNECTED);
-			break;	
-		case 3:
-			processEvent(NEO_CONNECTED);
-			if(previous != -1){				
-				switch(diskIdentify(previous)) {
-				case 0:
-					processEvent(DISK1_CONNECTED);
-					break;
-				case 1:
-					processEvent(DISK2_CONNECTED);
-					break;		
-				case 2:
-					processEvent(DISK3_CONNECTED);
-					break;	
-				}
+//	private int diskIdentify(int value){		
+//		for(int k = 0; k < 9; k++)
+//		{
+//			if(value == diskIdentifier[k]){		// key already exist
+//				if(value == 5 || value == 7 || value == 9){
+//					previous = -1;
+//				}
+//				return k;
+//			}				
+//		}
+//		if(j < 3 && neoStatusImg.isVisible()){
+//			diskIdentifier[j] = value;			// add new disk
+//			j++;
+//			previous = -1;
+//			return j-1;				
+//		}
+//		if(previous != value){
+//			previous = value;
+//		}				
+//		return -1;
+//	}
+	
+	private MatrixLoaderEvents mapDisk(MatrixLoaderEvents event){
+		switch (event) {
+		case DISC1_CONNECTED:
+		case DISC2_CONNECTED:
+		case DISC3_CONNECTED:
+			if (diskMap[0] == null) {
+				diskMap[0] = event;
 			}
+			if (diskMap[0] == event) {
+				return DISC1_CONNECTED;
+			}
+			
+			if (diskMap[1] == null) {
+				diskMap[1] = event;
+			}
+			if (diskMap[1] == event) {
+				return DISC2_CONNECTED;
+			}
+
+			if (diskMap[2] == null) {
+				diskMap[2] = event;
+			}
+			if (diskMap[2] == event) {
+				return DISC3_CONNECTED;
+			}
+			
 			break;
-		case 4:
-			processEvent(NEO_DISCONNECTED);
-			break;		
-		case 5:	
-			switch (diskProcess){
-			case 1:
-				processEvent(DISK1_DISCONNECTED);
-				break;	
-			case 2:
-				processEvent(DISK2_DISCONNECTED);		// output the disk
-				break;
-			case 3:
-				processEvent(DISK3_DISCONNECTED);
-				break;
+
+		case DISC1_DISCONNECTED:
+		case DISC2_DISCONNECTED:
+		case DISC3_DISCONNECTED:
+			switch (currentDisk){
+			case DISC1_CONNECTED:
+				return DISC1_DISCONNECTED;
+			case DISC2_CONNECTED:
+				return DISC2_DISCONNECTED;
+			case DISC3_CONNECTED:
+				return DISC3_DISCONNECTED;
 			default:
-					break;
-			}
-			break;	
-		case 6:
-			switch (diskProcess){
-			case 1:
-				processEvent(DISK1_DISCONNECTED);
-				break;	
-			case 2:
-				processEvent(DISK2_DISCONNECTED);		// output the disk
 				break;
-			case 3:
-				processEvent(DISK3_DISCONNECTED);
-				break;
-			default:
-					break;
 			}
 			break;
-		case 7:
-			switch (diskProcess){
-			case 1:
-				processEvent(DISK1_DISCONNECTED);
-				break;	
-			case 2:
-				processEvent(DISK2_DISCONNECTED);		// output the disk
-				break;
-			case 3:
-				processEvent(DISK3_DISCONNECTED);
-				break;
-			default:
-					break;
-			}
-			break;
-		case 8:
-			processEvent(EMP_PRESSED);
-			break;						
+			
 		default:
 			break;
 		}
-		System.out.println("Received" + i);
+		return event;
+	}
+	
+	@Override
+	public void comByteProcess(int i) {
+		MatrixLoaderEvents e = mapDisk(getEnumValue(i));
+		log.info(">"+e);
+		
+		processEvent(e);
+
+		switch (e) {
+		
+		case NEO_CONNECTED:
+			//processEvent(e);
+			if(currentDisk != NOP){			
+				processEvent(currentDisk);
+			}
+			break;
+			
+		case DISC1_CONNECTED:
+		case DISC2_CONNECTED:
+		case DISC3_CONNECTED:
+			currentDisk = e;
+			//processEvent(e);
+			break;
+			
+		case DISC1_DISCONNECTED:	
+		case DISC2_DISCONNECTED:
+		case DISC3_DISCONNECTED:
+			currentDisk = NOP;
+			//processEvent(e);
+			break;
+		default:
+			//processEvent(e);
+			break;
+		}
 	}	
+
+	/**
+	 * Convert integer value into enum value 
+	 * @param i byte received from COM port
+	 * @return corresponding enum value
+	 */
+	private MatrixLoaderEvents getEnumValue(int i) {
+		for (MatrixLoaderEvents v : MatrixLoaderEvents.values()) {
+			if (v.ordinal() == i) 
+				return v; 
+		}
+		return MatrixLoaderEvents.NOP;
+	}
 }
 

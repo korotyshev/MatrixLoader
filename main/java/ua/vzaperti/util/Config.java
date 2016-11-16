@@ -69,6 +69,8 @@ public class Config {
     	return result;
     }
 
-    
+	public String getProperty(String name) {
+		return props.getProperty(name);
+	}
     
 }
