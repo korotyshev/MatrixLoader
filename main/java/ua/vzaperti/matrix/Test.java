@@ -2,11 +2,15 @@ package ua.vzaperti.matrix;
 
 import java.awt.BorderLayout;
 import java.awt.EventQueue;
+import java.io.File;
+import java.net.URISyntaxException;
 
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import ua.vzaperti.matrix.util.ImageUtils;
+import ua.vzaperti.util.Config;
 import ua.vzaperti.util.VideoPanel;
 
 public class Test extends JFrame {
@@ -48,7 +52,14 @@ public class Test extends JFrame {
 		contentPane.setLayout(new BorderLayout(0, 0));
 		setContentPane(contentPane);
 		
-		vp = new VideoPanel("D:/a.mp4");
+		java.net.URL url = ImageUtils.class.getClassLoader().getResource(Config.getConfig().getProperty("video"));
+		File f;
+		try {
+		  f = new File(url.toURI());
+		} catch(URISyntaxException e) {
+		  f = new File(url.getPath());
+		}
+		vp = new VideoPanel(f);
 
 		contentPane.add(vp, BorderLayout.CENTER);
 	}

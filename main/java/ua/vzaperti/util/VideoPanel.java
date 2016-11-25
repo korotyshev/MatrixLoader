@@ -1,6 +1,7 @@
 package ua.vzaperti.util;
 
 import java.awt.Dimension;
+import java.io.File;
 
 //import org.bytedeco.javacv.CanvasFrame;
 import org.bytedeco.javacv.FFmpegFrameGrabber;
@@ -19,13 +20,13 @@ public class VideoPanel extends CanvasImage{
 	private boolean stop = false;
 	private long realTimeVideoStarted = 0;
 	private double aspectRatio = 1;
-	private String videoFile;
+	private File videoFile;
 	private Thread thread;
 
 	/**
 	 * @param videoFile Video file path
 	 */
-	public VideoPanel(String videoFile) {
+	public VideoPanel(File videoFile) {
 		this.videoFile = videoFile;
 	}
 	
