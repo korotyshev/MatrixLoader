@@ -26,5 +26,7 @@
 			<attribute name="org.eclipse.jdt.launching.CLASSPATH_ATTR_LIBRARY_PATH_ENTRY" value="C:/Users/ARyou/OneDrive/Документи/GitHub/MatrixLoader"/>
 		</attributes>
 	</classpathentry>
+	<classpathentry combineaccessrules="false" kind="src" path="/QuestTools"/>
+	<classpathentry combineaccessrules="false" kind="src" path="/MatrixJava"/>
 	<classpathentry kind="output" path="target/classes"/>
 </classpath>
