@@ -4,7 +4,6 @@
   <artifactId>MatrixLoader</artifactId>
   <version>0.0.1-SNAPSHOT</version>
   <build>
-    <sourceDirectory>src</sourceDirectory>
     <plugins>
       <plugin>
         <artifactId>maven-compiler-plugin</artifactId>
@@ -35,6 +34,12 @@
   
   
   <dependencies>
+	<dependency>
+	  <groupId>quest-tools</groupId>
+  	  <artifactId>quest-tools</artifactId>
+  	  <version>0.0.1</version>
+	</dependency>
+
 	<dependency>
 	    <groupId>org.bytedeco</groupId>
 	    <artifactId>javacv</artifactId>
